@@ -1,18 +1,20 @@
 // import { render, html } from "https://cdn.jsdelivr.net/npm/lit-html@3/+esm";
-import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.mjs";
 import { asyncLLM } from "https://cdn.jsdelivr.net/npm/asyncllm@2";
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { Marked } from "https://cdn.jsdelivr.net/npm/marked@13/+esm";
 import hljs from "https://cdn.jsdelivr.net/npm/highlight.js@11/+esm";
 import { parse } from "https://cdn.jsdelivr.net/npm/partial-json@0.1.7/+esm";
 
+const pyodideWorker = new Worker("./pyworker.js", { type: "module" });
+
 const $demos = document.getElementById("demos");
 const $hypotheses = document.getElementById("hypotheses");
 const $hypothesisPrompt = document.getElementById("hypothesis-prompt");
+const $synthesis = document.getElementById("synthesis");
+const $synthesisResult = document.getElementById("synthesis-result");
 const $status = document.getElementById("status");
-const loading = `<div class="text-center my-5"><div class="spinner-border" role="status"></div></div>`;
+const loading = /* html */`<div class="text-center my-5"><div class="spinner-border" role="status"></div></div>`;
 
-let pyodide;
 let data;
 let description;
 let hypotheses;
@@ -115,6 +117,9 @@ const describe = (data, col) => {
   return "";
 };
 
+const testButton = (index) =>
+  /* html */ `<button type="button" class="btn btn-sm btn-primary test-hypothesis" data-index="${index}">Test</button>`;
+
 // When the user clicks on a demo, analyze it
 $demos.addEventListener("click", async (e) => {
   e.preventDefault();
@@ -145,6 +150,7 @@ $demos.addEventListener("click", async (e) => {
     },
   };
 
+  $hypotheses.innerHTML = loading;
   for await (const { content } of asyncLLM("https://llmfoundry.straive.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}:hypoforge` },
@@ -154,6 +160,7 @@ $demos.addEventListener("click", async (e) => {
     ({ hypotheses } = parse(content));
     drawHypotheses();
   }
+  $synthesis.classList.remove("d-none");
 });
 
 function drawHypotheses() {
@@ -164,12 +171,11 @@ function drawHypotheses() {
       <div class="hypothesis col py-3" data-index="${index}">
         <div class="card h-100">
           <div class="card-body">
-            <h5 class="card-title">${hypothesis}</h5>
-            <p class="card-text">${benefit}</p>
+            <h5 class="card-title hypothesis-title">${hypothesis}</h5>
+            <p class="card-text hypothesis-benefit">${benefit}</p>
           </div>
           <div class="card-footer">
-            <button type="button" class="btn btn-sm btn-primary test-hypothesis" data-index="${index}">Test</button>
-            <div class="result"></div>
+            <div class="result">${testButton(index)}</div>
             <div class="outcome"></div>
           </div>
         </div>
@@ -212,27 +218,36 @@ $hypotheses.addEventListener("click", async (e) => {
   }
 
   // Extract the code inside the last ```...``` block
-  const code = [...generatedContent.matchAll(/```python\n*([\s\S]*?)\n```(\n|$)/g)].at(-1)[1];
-  if (pyodide) {
-    $outcome.innerHTML = loading;
-    pyodide.globals.set("data", pyodide.toPy(data));
-    try {
-      pyodide.runPython(code + "\n\nresult = test_hypothesis(pd.DataFrame(data))");
-    } catch (e) {
-      $outcome.innerHTML = `<div class="alert alert-danger">${e.message}</div>`;
+  let code = [...generatedContent.matchAll(/```python\n*([\s\S]*?)\n```(\n|$)/g)].at(-1)[1];
+  code += "\n\ntest_hypothesis(pd.DataFrame(data))";
+
+  $outcome.innerHTML = loading;
+
+  const listener = async (event) => {
+    const { result, error } = event.data;
+    pyodideWorker.removeEventListener("message", listener);
+
+    if (error) {
+      $outcome.innerHTML = `<pre class="alert alert-danger">${error}</pre>`;
       return;
     }
-    const [result, pValue] = pyodide.globals.get("result").toJs();
-    $outcome.innerHTML = loading;
-
+    const [success, pValue] = result;
     const body = {
       model: "gpt-4o-mini",
       messages: [
-        { role: "system", content: `You are an expert data analyst.
+        {
+          role: "system",
+          content: `You are an expert data analyst.
 Given a hypothesis and its outcome, provide a plain English summary of the findings as a crisp H5 heading (#####), followed by 1-2 concise supporting sentences.
 Highlight in **bold** the keywords in the supporting statements.
-Do not mention the p-value but _interpret_ it to support the conclusion quantitatively.` },
-        { role: "user", content: `Hypothesis: ${hypothesis.hypothesis}\n\n${description}\n\nResult: ${result}. p-value: ${num(pValue)}` },
+Do not mention the p-value but _interpret_ it to support the conclusion quantitatively.`,
+        },
+        {
+          role: "user",
+          content: `Hypothesis: ${hypothesis.hypothesis}\n\n${description}\n\nResult: ${success}. p-value: ${num(
+            pValue
+          )}`,
+        },
       ],
       stream: true,
       stream_options: { include_usage: true },
@@ -246,9 +261,69 @@ Do not mention the p-value but _interpret_ it to support the conclusion quantita
       if (!content) continue;
       $outcome.innerHTML = marked.parse(content);
     }
+    $result.innerHTML = /* html */ `<details>
+      <summary class="h5 my-3">Analysis</summary>
+      ${marked.parse(generatedContent)}
+    </details>`;
+  };
+
+  $outcome.innerHTML = loading;
+  pyodideWorker.addEventListener("message", listener);
+  pyodideWorker.postMessage({ id: "1", code, data, context: {} });
+});
+
+document.querySelector("#run-all").addEventListener("click", async (e) => {
+  const $hypotheses = [...document.querySelectorAll(".hypothesis")];
+  const $pending = $hypotheses.filter((d) => !d.querySelector(".outcome").textContent.trim());
+  $pending.forEach((el) => el.querySelector(".test-hypothesis").click());
+});
+
+document.querySelector("#synthesize").addEventListener("click", async (e) => {
+  const hypotheses = [...document.querySelectorAll(".hypothesis")]
+    .map((h) => ({
+      title: h.querySelector(".hypothesis-title").textContent,
+      benefit: h.querySelector(".hypothesis-benefit").textContent,
+      outcome: h.querySelector(".outcome").textContent.trim(),
+    }))
+    .filter((d) => d.outcome);
+
+  const body = {
+    model: "gpt-4o-mini",
+    messages: [
+      {
+        role: "system",
+        content: `Given the below hypotheses and results, summarize the key takeaways and actions in Markdown.
+Use action titles. Just reading titles should give the audience a clear idea of what to do.
+Highlight key phrases in **bold**.`,
+      },
+      {
+        role: "user",
+        content: hypotheses
+          .map((h) => `Hypothesis: ${h.title}\nBenefit: ${h.benefit}\nResult: ${h.outcome}`)
+          .join("\n\n"),
+      },
+    ],
+    stream: true,
+    stream_options: { include_usage: true },
+    temperature: 0,
+  };
+
+  $synthesisResult.innerHTML = loading;
+  for await (const { content } of asyncLLM("https://llmfoundry.straive.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}:hypoforge` },
+    body: JSON.stringify(body),
+  })) {
+    if (!content) continue;
+    $synthesisResult.innerHTML = marked.parse(content);
   }
 });
 
-pyodide = await loadPyodide();
-await pyodide.loadPackage(["numpy", "pandas", "scipy"]);
+document.querySelector("#reset").addEventListener("click", async (e) => {
+  for (const $hypothesis of document.querySelectorAll(".hypothesis")) {
+    $hypothesis.querySelector(".result").innerHTML = testButton($hypothesis.dataset.index);
+    $hypothesis.querySelector(".outcome").textContent = "";
+  }
+});
+
 $status.innerHTML = "";

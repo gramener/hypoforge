@@ -86,6 +86,14 @@ def test_hypothesis(df) -> (bool, float):
 
     <div id="demos" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 my-5 justify-content-center"></div>
     <div id="hypotheses" class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 my-5 justify-content-center"></div>
+    <div id="synthesis" class="d-none">
+      <div class="text-center">
+        <button type="button" class="btn btn-lg btn-warning" id="run-all">Run All</button>
+        <button type="button" class="btn btn-lg btn-primary" id="synthesize">Synthesize tested hypotheses</button>
+        <button type="button" class="btn btn-lg btn-danger" id="reset">Reset</button>
+      </div>
+      <div id="synthesis-result" class="mx-auto my-3 narrative"></div>
+    </div>
     <div id="status"></div>
   </div>
 
@@ -98,7 +106,7 @@ def test_hypothesis(df) -> (bool, float):
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" type="module"></script>
   <script src="https://cdn.jsdelivr.net/npm/@gramex/ui@0.3/dist/dark-theme.js" type="module"></script>
-  <script src="script.js" type="module"></script>
+  <script src="script.js?v=1" type="module"></script>
 </body>
 
 </html>
