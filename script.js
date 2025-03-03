@@ -4,6 +4,7 @@ import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import { Marked } from "https://cdn.jsdelivr.net/npm/marked@13/+esm";
 import hljs from "https://cdn.jsdelivr.net/npm/highlight.js@11/+esm";
 import { parse } from "https://cdn.jsdelivr.net/npm/partial-json@0.1.7/+esm";
+import sqlite3InitModule from "https://esm.sh/@sqlite.org/sqlite-wasm@3.46.1-build3";
 
 const pyodideWorker = new Worker("./pyworker.js", { type: "module" });
 
@@ -13,7 +14,7 @@ const $hypothesisPrompt = document.getElementById("hypothesis-prompt");
 const $synthesis = document.getElementById("synthesis");
 const $synthesisResult = document.getElementById("synthesis-result");
 const $status = document.getElementById("status");
-const loading = /* html */`<div class="text-center my-5"><div class="spinner-border" role="status"></div></div>`;
+const loading = /* html */ `<div class="text-center my-5"><div class="spinner-border" role="status"></div></div>`;
 
 let data;
 let description;
@@ -120,6 +121,32 @@ const describe = (data, col) => {
 const testButton = (index) =>
   /* html */ `<button type="button" class="btn btn-sm btn-primary test-hypothesis" data-index="${index}">Test</button>`;
 
+// Add support for SQLite files
+async function loadData(demo) {
+  if (demo.href.match(/\.(sqlite3|sqlite|db|s3db|sl3)$/i)) {
+    // Load SQLite database
+    const response = await fetch(demo.href);
+    const buffer = await response.arrayBuffer();
+    const dbName = demo.href.split("/").pop();
+    await sqlite3.capi.sqlite3_js_posix_create_file(dbName, new Uint8Array(buffer));
+    // Copy tables from the uploaded database to a new DB instance
+    const uploadDB = new sqlite3.oo1.DB(dbName, "r");
+    const tables = uploadDB.exec("SELECT name FROM sqlite_master WHERE type='table'", { rowMode: "object" });
+    if (!tables.length) {
+      throw new Error("No tables found in database");
+    }
+    // Get data from the first table
+    const tableName = tables[0].name;
+    const result = uploadDB.exec(`SELECT * FROM "${tableName}"`, { rowMode: "object" });
+    // Clean up
+    uploadDB.close();
+    return result;
+  } else {
+    // Load CSV as before
+    return d3.csv(demo.href, d3.autoType);
+  }
+}
+
 // When the user clicks on a demo, analyze it
 $demos.addEventListener("click", async (e) => {
   e.preventDefault();
@@ -127,7 +154,7 @@ $demos.addEventListener("click", async (e) => {
   if (!$demo) return;
 
   const demo = demos[+$demo.dataset.index];
-  data = await d3.csv(demo.href, d3.autoType);
+  data = await loadData(demo);
   const columnDescription = Object.keys(data[0])
     .map((col) => `- ${col}: ${describe(data, col)}`)
     .join("\n");
@@ -327,3 +354,6 @@ document.querySelector("#reset").addEventListener("click", async (e) => {
 });
 
 $status.innerHTML = "";
+
+// Initialize SQLite
+const sqlite3 = await sqlite3InitModule({ printErr: console.error });
