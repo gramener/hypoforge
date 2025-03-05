@@ -1,104 +1,93 @@
-# Patient Pulse
+# Hypothesis Forge
 
-An AI-powered tool that analyzes patient call recordings from clinical trials to identify drugs, diseases, symptoms, and emotional patterns.
+An AI-powered tool that automatically generates and tests hypotheses on data, providing actionable insights through statistical analysis.
 
 ## Overview
 
-Patient Pulse processes audio recordings of patient calls to extract key medical information and emotional insights. It combines speech analysis with emotion detection to provide a comprehensive view of patient interactions.
+Hypothesis Forge analyzes your data and generates hypotheses that you can test. It then automatically tests them and provides detailed results with statistical significance.
 
 ```mermaid
 flowchart TD
-    A[Audio Recording] --> B[Transcript Analysis]
-    A --> C[Prosody Analysis]
-    B --> D[Medical Entity Detection]
-    C --> E[Emotion Mapping]
-    D --> F[Interactive Visualization]
-    E --> F
+    A[Data Input] --> B[Hypothesis Generation]
+    B --> C[Statistical Testing]
+    C --> D[Results Synthesis]
+    D --> E[Interactive Visualization]
 ```
-
-![Screenshot: Analysis](patientpulse.png)
 
 ## Features
 
-- **Medical Entity Recognition**: Identifies drugs, diseases, and symptoms mentioned in calls
-- **Emotion Analysis**: Maps prosodic features to Plutchik's 8 basic emotions
-- **Interactive Visualization**:
-  - Real-time audio playback with synchronized transcript
-  - Dynamic emotion radar chart overlaid on Plutchik's wheel
-  - Highlighted current sentence during playback
-  - Interactive timeline slider for navigation
-- **Dark Mode Support**: Auto/light/dark theme options
-- **Mobile-Responsive**: Bootstrap 5.3 interface
+- **Automated Hypothesis Generation**: Creates relevant hypotheses based on data context and audience
+- **Statistical Testing**: 
+  - Automatic selection of appropriate statistical tests
+  - Support for t-tests, chi-square, correlation significance tests
+  - P-value calculation and interpretation
+- **Interactive Interface**:
+  - Real-time hypothesis testing
+  - Dynamic results visualization
+  - Dark mode support
+  - Mobile-responsive design
+  - "Run All" feature to test multiple hypotheses at once
+  - Result synthesis for actionable insights
+- **Multiple Data Formats**:
+  - CSV files
+  - SQLite databases (.sqlite3, .sqlite, .db, .s3db, .sl3)
+  - Support for various data types (numeric, categorical, temporal)
 
 ## Usage
 
-1. Select a patient call recording from the available transcripts
+1. Select a dataset from the available demos
 2. The application will:
-   - Play the audio recording
-   - Display the synchronized transcript
-   - Show emotional patterns on Plutchik's wheel
-   - Highlight medical entities in the text
-3. Use the audio controls to:
-   - Play/pause the recording
-   - Navigate through the timeline
-   - Jump to specific sections
+   - Load and analyze the data
+   - Generate relevant hypotheses
+   - Display hypotheses with test buttons
+3. For each hypothesis:
+   - Click "Test" to run statistical analysis
+   - View detailed results and interpretation
+   - See p-values and statistical significance
+4. After testing hypotheses:
+   - Click "Synthesize" to get actionable insights
+   - Use "Reset" to clear results and start over
 
 ## Setup
 
 ### Prerequisites
 
 - Modern web browser with JavaScript enabled
-- Access to LLM Foundry API endpoints
-- Hume.ai API access for prosody analysis
+- LLM Foundry account for API access
+- Internet connection for loading dependencies
 
 ### Local Setup
 
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/gramener/patientpulse.git
-cd patientpulse
+git clone https://github.com/gramener/hypoforge.git
+cd hypoforge
 ```
 
-2. Serve the files using the static auth server:
+2. Serve the files using a static server:
 
 ```bash
 uvx https://raw.githubusercontent.com/sanand0/staticauth/main/app.py
 ```
 
 3. Open `http://localhost:8000` in your browser
-
-## Adding New Recordings
-
-1. Convert audio to MP3 format with lowercase hyphenated filename
-2. Process through Hume.ai platform for prosody analysis
-3. Extract and rename prosody CSV file
-4. Compress audio to OPUS format
-5. Add entry to `config.json`:
-
-```json
-{
-  "title": "Recording Title",
-  "audio": "audio/filename.opus",
-  "prosody": "audio/filename.prosody.csv"
-}
-```
+4. Log in when prompted with your LLM Foundry credentials
 
 ## Technical Details
 
-### Architecture
-
-- Frontend: Vanilla JavaScript with lit-html for rendering
-- Audio Processing: Hume.ai Expression Models
-- Medical Analysis: GPT-4o-mini via LLM Foundry
-- Styling: Bootstrap 5.3.3 with dark mode
-
 ### Dependencies
 
-- lit-html - Template rendering
-- d3.js - Emotion wheel visualization
+- asyncLLM - API interaction with LLM endpoints
+- d3.js - Data visualization and CSV parsing
 - Bootstrap - UI framework and styling
 - Bootstrap Icons - Icon system
+- Pyodide - Python runtime for browser
+- Marked - Markdown parsing
+- Highlight.js - Code syntax highlighting
+- sqlite-wasm - SQLite database support in browser
+- partial-json - JSON parsing
+
 
 ## License
 
