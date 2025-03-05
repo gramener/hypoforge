@@ -11,7 +11,6 @@ flowchart TD
     A[Data Input] --> B[Hypothesis Generation]
     B --> C[Statistical Testing]
     C --> D[Results Synthesis]
-    D --> E[Interactive Visualization]
 ```
 
 ## Features
