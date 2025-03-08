@@ -7,6 +7,12 @@
       "body": "Electronic Health Records covering patient demographics, clinical metrics, comorbidities, medications, etc. over time"
     },
     {
+      "title": "Tourist Spend",
+      "href": "https://raw.githubusercontent.com/gramener/datasets/refs/heads/main/tourists.csv",
+      "audience": "Given tourist spend data, generate insights on how a government tourism department can increase tourist spend in the country.",
+      "body": "Tourist spend data with details on issuer country, transaction amount, and other details."
+    },
+    {
       "title": "Card Transactions",
       "href": "https://raw.githubusercontent.com/gramener/datasets/main/card_transactions.csv",
       "audience": "Given card transaction data, generate insights on consumer spending behavior, fraud detection, and financial trends. This information can be valuable for financial analysts, marketers, and risk management professionals.",

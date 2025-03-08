@@ -160,8 +160,7 @@ $demos.addEventListener("click", async (e) => {
     .join("\n");
   const numColumns = Object.keys(data[0]).length;
   description = `The Pandas DataFrame df has ${data.length} rows and ${numColumns} columns:\n${columnDescription}`;
-  const systemPrompt = $hypothesisPrompt.value || demo.audience;
-  if (!$hypothesisPrompt.value) $hypothesisPrompt.value = demo.audience;
+  const systemPrompt = $hypothesisPrompt.value = demo.audience;
   const body = {
     model: "gpt-4o-mini",
     messages: [
@@ -320,8 +319,14 @@ document.querySelector("#synthesize").addEventListener("click", async (e) => {
       {
         role: "system",
         content: `Given the below hypotheses and results, summarize the key takeaways and actions in Markdown.
-Use action titles. Just reading titles should give the audience a clear idea of what to do.
-Highlight key phrases in **bold**.`,
+Begin with the hypotheses with lowest p-values AND highest business impact. Ignore results with errors.
+Use action titles has H5 (#####). Just reading titles should tell the audience EXACTLY what to do.
+Below each, add supporting bullet points that
+  - PROVE the action title, mentioning which hypotheses led to this conclusion.
+  - Do not mention the p-value but _interpret_ it to support the action
+  - Highlight key phrases in **bold**.
+Finally, after a break (---) add a 1-paragraph executive summary section (H5) summarizing these actions.
+`,
       },
       {
         role: "user",

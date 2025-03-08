@@ -49,22 +49,31 @@
       <p>Hypothesis Forge analyzes your data and generates hypotheses that you can test. Then it automatically tests them for you and gives you the results.</p>
     </div>
 
-    <div class="row mb-3 d-none">
-      <div class="col">
-        <textarea
-          id="hypothesis-prompt"
-          class="form-control"
-          rows="3"
-          placeholder="Enter custom prompt for hypothesis generation (optional)"></textarea>
-      </div>
-      <div class="col">
-        <textarea
-          id="analysis-prompt"
-          class="form-control"
-          rows="3"
-          placeholder="Enter custom prompt for analysis (optional)">You are an expert data analyst. Test the given hypothesis on the provided Pandas DataFrame (df) as follows:
+    <div class="text-center mb-3">
+      <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#advancedSettings" aria-expanded="false" aria-controls="advancedSettings">
+        Advanced Settings
+      </button>
+    </div>
 
-1. Create derived columns ONLY IF REQUIRED. E.g. If “CurrentMedication” contains "insulin", classify it as "Injectable", otherwise as "Pill".
+    <div class="collapse mb-3" id="advancedSettings">
+      <div class="row">
+        <div class="col">
+          <label for="hypothesis-prompt" class="form-label fw-bold">Hypothesis Generation Prompt</label>
+          <textarea
+            id="hypothesis-prompt"
+            class="form-control font-monospace"
+            rows="5"
+            placeholder="Enter custom prompt for hypothesis generation (optional)"></textarea>
+        </div>
+        <div class="col">
+          <label for="analysis-prompt" class="form-label fw-bold">Analysis Prompt</label>
+          <textarea
+            id="analysis-prompt"
+            class="form-control font-monospace"
+            rows="5"
+            placeholder="Enter custom prompt for analysis (optional)">You are an expert data analyst. Test the given hypothesis on the provided Pandas DataFrame (df) as follows:
+
+1. Create derived columns ONLY IF REQUIRED. E.g. If "CurrentMedication" contains "insulin", classify it as "Injectable", otherwise as "Pill".
 2. If that's not possible, provide the best possible answer based on available data to the hypothesis, making assumptions.
 3. Use the appropriate hypothesis test, e.g. t-test, chi-square, correlation significance test, etc.
 4. Return the results as (success: bool, p_value: float)
@@ -79,8 +88,8 @@ def test_hypothesis(df) -> (bool, float):
     # use the imported modules to test the hypothesis
     return result, p_value
 \`\`\`
-```
 </textarea>
+        </div>
       </div>
     </div>
 
