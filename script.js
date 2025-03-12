@@ -258,6 +258,7 @@ $hypotheses.addEventListener("click", async (e) => {
       return;
     }
     const [success, pValue] = result;
+    $outcome.classList.add(pValue < 0.05 ? "success" : "failure");
     const body = {
       model: "gpt-4o-mini",
       messages: [
