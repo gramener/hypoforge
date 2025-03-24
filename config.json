@@ -7,6 +7,12 @@
       "body": "Electronic Health Records covering patient demographics, clinical metrics, comorbidities, medications, etc. over time"
     },
     {
+      "title": "Supply Chain",
+      "href": "https://raw.githubusercontent.com/gramener/datasets/refs/heads/main/supply_chain.csv",
+      "audience": "Senior management of a fashion & beauty supply chain organization",
+      "body": "Explore insights from supply chain data from a fashion & beauty store's makeup products."
+    },
+    {
       "title": "Tourist Spend",
       "href": "https://raw.githubusercontent.com/gramener/datasets/refs/heads/main/tourists.csv",
       "audience": "Given tourist spend data, generate insights on how a government tourism department can increase tourist spend in the country.",
